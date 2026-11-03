@@ -1,0 +1,101 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceVehiculos2022",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Vehiculos_2022",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           },
+                                           {
+                                               "name":  "SourceVehiculos2023",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Vehiculos_2023",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkVehiculosExcel",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Vehiculos",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceVehiculos2022",
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceVehiculos2023",
+                                               "SourceVehiculos2022 derive(",
+                                               "    AnioFuente = \u00272022\u0027,",
+                                               "    VehiculoId = toString(byName(\u0027nro_bus\u0027)),",
+                                               "    Placa = toString(byName(\u0027placa\u0027)),",
+                                               "    TipoVehiculo = toString(byName(\u0027tipo_bus\u0027)),",
+                                               "    CapacidadEfectiva = toString(byName(\u0027capacidad\u0027)),",
+                                               "    VigenciaDesde = toString(byName(\u0027fecha_desde\u0027)),",
+                                               "    VigenciaHasta = toString(byName(\u0027fecha_hasta\u0027)),",
+                                               "    Estado = toString(byName(\u0027estado\u0027))",
+                                               ") ~\u003e Derivar2022",
+                                               "SourceVehiculos2023 derive(",
+                                               "    AnioFuente = \u00272023\u0027,",
+                                               "    VehiculoId = toString(byName(\u0027nro_bus\u0027)),",
+                                               "    Placa = toString(byName(\u0027placa\u0027)),",
+                                               "    TipoVehiculo = toString(byName(\u0027tipo_bus\u0027)),",
+                                               "    CapacidadEfectiva = toString(byName(\u0027capacidad\u0027)),",
+                                               "    VigenciaDesde = toString(byName(\u0027fecha_desde\u0027)),",
+                                               "    VigenciaHasta = toString(byName(\u0027fecha_hasta\u0027)),",
+                                               "    Estado = toString(byName(\u0027estado\u0027))",
+                                               ") ~\u003e Derivar2023",
+                                               "Derivar2022, Derivar2023 union(byName: true) ~\u003e UnirVehiculos",
+                                               "UnirVehiculos select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    VehiculoId,",
+                                               "    Placa,",
+                                               "    TipoVehiculo,",
+                                               "    CapacidadEfectiva,",
+                                               "    VigenciaDesde,",
+                                               "    VigenciaHasta,",
+                                               "    Estado",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarVehiculos",
+                                               "SeleccionarVehiculos sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkVehiculosExcel"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "Derivar2022"
+                                                   },
+                                                   {
+                                                       "name":  "Derivar2023"
+                                                   },
+                                                   {
+                                                       "name":  "UnirVehiculos"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarVehiculos"
+                                                   }
+                                               ]
+                       }
+}

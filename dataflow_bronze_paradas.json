@@ -1,0 +1,87 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceParadas",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_CSV_Paradas",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkParadas",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Paradas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(output(",
+                                               "    nro_parada as string,",
+                                               "    nombre_parada as string,",
+                                               "    zona as string,",
+                                               "    latitud as string,",
+                                               "    longitud as string,",
+                                               "    fecha_desde as string,",
+                                               "    fecha_hasta as string,",
+                                               "    estado as string",
+                                               "),",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false) ~\u003e SourceParadas",
+                                               "SourceParadas keyGenerate(output(fila as long),",
+                                               "startAt: 1L) ~\u003e ConFila",
+                                               "ConFila derive(",
+                                               "    AnioFuente = iif(fila \u003c= 219L, \u00272020\u0027, \u00272021\u0027),",
+                                               "    ParadaHistoricaId = nro_parada,",
+                                               "    CodigoPublicado = nro_parada,",
+                                               "    NombreParada = nombre_parada,",
+                                               "    Zona = zona,",
+                                               "    Latitud = latitud,",
+                                               "    Longitud = longitud,",
+                                               "    VigenciaDesde = fecha_desde,",
+                                               "    VigenciaHasta = fecha_hasta,",
+                                               "    Estado = estado",
+                                               ") ~\u003e DerivarParadas",
+                                               "DerivarParadas select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    ParadaHistoricaId,",
+                                               "    CodigoPublicado,",
+                                               "    NombreParada,",
+                                               "    Zona,",
+                                               "    Latitud,",
+                                               "    Longitud,",
+                                               "    VigenciaDesde,",
+                                               "    VigenciaHasta,",
+                                               "    Estado",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true) ~\u003e SeleccionarParadas",
+                                               "SeleccionarParadas sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027) ~\u003e SinkParadas"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "ConFila"
+                                                   },
+                                                   {
+                                                       "name":  "DerivarParadas"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarParadas"
+                                                   }
+                                               ]
+                       }
+}

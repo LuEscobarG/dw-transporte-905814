@@ -1,0 +1,103 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceBronzeIncidenteRuta",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_Bronze_IncidenteRuta",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkSilverIncidenteRuta",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Silver_IncidenteRuta",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "format: \u0027table\u0027",
+                                               ") ~\u003e SourceBronzeIncidenteRuta",
+                                               "SourceBronzeIncidenteRuta derive(",
+                                               "    AnioFuenteLimpio = toShort(trim(toString(byName(\u0027AnioFuente\u0027)))),",
+                                               "    IncidenteIdLimpio = upper(trim(toString(byName(\u0027IncidenteId\u0027)))),",
+                                               "    RutaOriginal = upper(trim(toString(byName(\u0027RutaHistoricaId\u0027)))),",
+                                               "    EsPrincipalOriginal = upper(trim(toString(byName(\u0027EsPrincipal\u0027))))",
+                                               ") ~\u003e PrepararIncidenteRuta",
+                                               "PrepararIncidenteRuta derive(",
+                                               "    RutaHistoricaIdLimpio = case(",
+                                               "        RutaOriginal == \u0027RH-07-OLD\u0027, \u0027RH-07\u0027,",
+                                               "        RutaOriginal == \u0027RH-12-OLD\u0027, \u0027RH-12\u0027,",
+                                               "        RutaOriginal == \u0027RH-07-NEW\u0027, \u0027RH-07-NEW\u0027,",
+                                               "        RutaOriginal == \u0027RH-12-N\u0027, \u0027RH-12-N\u0027,",
+                                               "        RutaOriginal == \u0027RH-12-S\u0027, \u0027RH-12-S\u0027,",
+                                               "        RutaOriginal",
+                                               "    ),",
+                                               "    EsPrincipalLimpio = iif(",
+                                               "        EsPrincipalOriginal == \u00271\u0027 || EsPrincipalOriginal == \u0027TRUE\u0027,",
+                                               "        true(),",
+                                               "        false()",
+                                               "    )",
+                                               ") ~\u003e NormalizarIncidenteRuta",
+                                               "NormalizarIncidenteRuta window(",
+                                               "    over(IncidenteIdLimpio, RutaHistoricaIdLimpio),",
+                                               "    asc(AnioFuenteLimpio, true),",
+                                               "    FilaRelacion = rowNumber()",
+                                               ") ~\u003e NumerarRelaciones",
+                                               "NumerarRelaciones filter(",
+                                               "    FilaRelacion == 1",
+                                               ") ~\u003e RelacionesUnicas",
+                                               "RelacionesUnicas select(mapColumn(",
+                                               "    AnioFuente = AnioFuenteLimpio,",
+                                               "    IncidenteId = IncidenteIdLimpio,",
+                                               "    RutaHistoricaId = RutaHistoricaIdLimpio,",
+                                               "    EsPrincipal = EsPrincipalLimpio",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarIncidenteRuta",
+                                               "SeleccionarIncidenteRuta alterRow(",
+                                               "    upsertIf(true())",
+                                               ") ~\u003e MarcarUpsert",
+                                               "MarcarUpsert sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: false,",
+                                               "updateable: false,",
+                                               "upsertable: true,",
+                                               "keys:[\u0027IncidenteId\u0027,\u0027RutaHistoricaId\u0027],",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkSilverIncidenteRuta"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "PrepararIncidenteRuta"
+                                                   },
+                                                   {
+                                                       "name":  "NormalizarIncidenteRuta"
+                                                   },
+                                                   {
+                                                       "name":  "NumerarRelaciones"
+                                                   },
+                                                   {
+                                                       "name":  "RelacionesUnicas"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarIncidenteRuta"
+                                                   },
+                                                   {
+                                                       "name":  "MarcarUpsert"
+                                                   }
+                                               ]
+                       }
+}

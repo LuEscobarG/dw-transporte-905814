@@ -1,0 +1,11 @@
+{
+    "typeProperties":  {
+                           "table":  "IncidenteRutaAzure",
+                           "schema":  "bronze"
+                       },
+    "type":  "AzureSqlTable",
+    "linkedServiceName":  {
+                              "referenceName":  "LS_SQL_DW",
+                              "type":  "LinkedServiceReference"
+                          }
+}

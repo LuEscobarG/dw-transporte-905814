@@ -1,0 +1,87 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceDemanda",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_CSV_Demanda",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkDemanda",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_DemandaParadas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(output(",
+                                               "    fec_servicio as string,",
+                                               "    cod_ruta as string,",
+                                               "    nro_parada as string,",
+                                               "    franja as string,",
+                                               "    abordajes_manuales as string,",
+                                               "    descensos_manuales as string,",
+                                               "    demanda_no_atendida as string,",
+                                               "    medicion as string",
+                                               "),",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false) ~\u003e SourceDemanda",
+                                               "SourceDemanda keyGenerate(output(fila as long),",
+                                               "startAt: 1L) ~\u003e ConFila",
+                                               "ConFila derive(",
+                                               "    AnioFuente = iif(instr(fec_servicio, \u00272020\u0027) \u003e 0, \u00272020\u0027, \u00272021\u0027),",
+                                               "    DemandaId = concat(\u0027DM-CSV-\u0027, toString(fila)),",
+                                               "    FechaServicio = fec_servicio,",
+                                               "    RutaHistoricaId = cod_ruta,",
+                                               "    ParadaHistoricaId = nro_parada,",
+                                               "    Franja = franja,",
+                                               "    ValidacionesTarjeta = abordajes_manuales,",
+                                               "    Descensos = descensos_manuales,",
+                                               "    DemandaNoAtendida = demanda_no_atendida,",
+                                               "    Metodo = medicion",
+                                               ") ~\u003e DerivarDemanda",
+                                               "DerivarDemanda select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    DemandaId,",
+                                               "    FechaServicio,",
+                                               "    RutaHistoricaId,",
+                                               "    ParadaHistoricaId,",
+                                               "    Franja,",
+                                               "    ValidacionesTarjeta,",
+                                               "    Descensos,",
+                                               "    DemandaNoAtendida,",
+                                               "    Metodo",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true) ~\u003e SeleccionarDemanda",
+                                               "SeleccionarDemanda sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027) ~\u003e SinkDemanda"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "ConFila"
+                                                   },
+                                                   {
+                                                       "name":  "DerivarDemanda"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarDemanda"
+                                                   }
+                                               ]
+                       }
+}

@@ -1,0 +1,82 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceVehiculos",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_CSV_Vehiculos",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkVehiculos",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Vehiculos",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(output(",
+                                               "    nro_bus as string,",
+                                               "    placa as string,",
+                                               "    tipo_bus as string,",
+                                               "    capacidad as string,",
+                                               "    fecha_desde as string,",
+                                               "    fecha_hasta as string,",
+                                               "    estado as string",
+                                               "),",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false) ~\u003e SourceVehiculos",
+                                               "SourceVehiculos keyGenerate(output(fila as long),",
+                                               "startAt: 1L) ~\u003e ConFila",
+                                               "ConFila derive(",
+                                               "    AnioFuente = iif(fila \u003c= 120L, \u00272020\u0027, \u00272021\u0027),",
+                                               "    VehiculoId = nro_bus,",
+                                               "    Placa = placa,",
+                                               "    TipoVehiculo = tipo_bus,",
+                                               "    CapacidadEfectiva = capacidad,",
+                                               "    VigenciaDesde = fecha_desde,",
+                                               "    VigenciaHasta = fecha_hasta,",
+                                               "    Estado = estado",
+                                               ") ~\u003e DerivarVehiculos",
+                                               "DerivarVehiculos select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    VehiculoId,",
+                                               "    Placa,",
+                                               "    TipoVehiculo,",
+                                               "    CapacidadEfectiva,",
+                                               "    VigenciaDesde,",
+                                               "    VigenciaHasta,",
+                                               "    Estado",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true) ~\u003e SeleccionarVehiculos",
+                                               "SeleccionarVehiculos sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027) ~\u003e SinkVehiculos"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "ConFila"
+                                                   },
+                                                   {
+                                                       "name":  "DerivarVehiculos"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarVehiculos"
+                                                   }
+                                               ]
+                       }
+}

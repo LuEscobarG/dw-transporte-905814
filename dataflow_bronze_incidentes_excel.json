@@ -1,0 +1,149 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceIncidentes2022",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Incidentes_2022",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           },
+                                           {
+                                               "name":  "SourceIncidentes2023",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Incidentes_2023",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkIncidentesExcel",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Incidentes",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         },
+                                         {
+                                             "name":  "SinkIncidenteRutaExcel",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_IncidenteRuta",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceIncidentes2022",
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceIncidentes2023",
+                                               "SourceIncidentes2022 derive(",
+                                               "    AnioFuente = \u00272022\u0027,",
+                                               "    IncidenteId = toString(byName(\u0027id_incidente\u0027)),",
+                                               "    TipoIncidente = toString(byName(\u0027tipo\u0027)),",
+                                               "    Severidad = toString(byName(\u0027severidad\u0027)),",
+                                               "    FechaHoraInicio = concat(toString(byName(\u0027fecha_inicio\u0027)), \u0027 \u0027, toString(byName(\u0027hora_inicio\u0027))),",
+                                               "    FechaHoraFin = concat(toString(byName(\u0027fecha_fin\u0027)), \u0027 \u0027, toString(byName(\u0027hora_fin\u0027))),",
+                                               "    FechaHoraRegistro = toString(byName(\u0027fecha_registro\u0027)),",
+                                               "    VehiculoId = toString(byName(\u0027vehiculo_afectado\u0027)),",
+                                               "    Descripcion = toString(byName(\u0027descripcion\u0027)),",
+                                               "    RutasAfectadas = toString(byName(\u0027rutas_afectadas\u0027))",
+                                               ") ~\u003e Derivar2022",
+                                               "SourceIncidentes2023 derive(",
+                                               "    AnioFuente = \u00272023\u0027,",
+                                               "    IncidenteId = toString(byName(\u0027id_incidente\u0027)),",
+                                               "    TipoIncidente = toString(byName(\u0027tipo\u0027)),",
+                                               "    Severidad = toString(byName(\u0027severidad\u0027)),",
+                                               "    FechaHoraInicio = concat(toString(byName(\u0027fecha_inicio\u0027)), \u0027 \u0027, toString(byName(\u0027hora_inicio\u0027))),",
+                                               "    FechaHoraFin = concat(toString(byName(\u0027fecha_fin\u0027)), \u0027 \u0027, toString(byName(\u0027hora_fin\u0027))),",
+                                               "    FechaHoraRegistro = toString(byName(\u0027fecha_registro\u0027)),",
+                                               "    VehiculoId = toString(byName(\u0027vehiculo_afectado\u0027)),",
+                                               "    Descripcion = toString(byName(\u0027descripcion\u0027)),",
+                                               "    RutasAfectadas = toString(byName(\u0027rutas_afectadas\u0027))",
+                                               ") ~\u003e Derivar2023",
+                                               "Derivar2022, Derivar2023 union(byName: true) ~\u003e UnirIncidentes",
+                                               "UnirIncidentes select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    IncidenteId,",
+                                               "    TipoIncidente,",
+                                               "    Severidad,",
+                                               "    FechaHoraInicio,",
+                                               "    FechaHoraFin,",
+                                               "    FechaHoraRegistro,",
+                                               "    VehiculoId,",
+                                               "    Descripcion",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarIncidentes",
+                                               "UnirIncidentes derive(",
+                                               "    RutaHistoricaId = unfold(split(RutasAfectadas, \u0027|\u0027))",
+                                               ") ~\u003e ExpandirRutas",
+                                               "ExpandirRutas derive(",
+                                               "    EsPrincipal = iif(RutaHistoricaId == split(RutasAfectadas, \u0027|\u0027)[1], \u00271\u0027, \u00270\u0027)",
+                                               ") ~\u003e MarcarPrincipal",
+                                               "MarcarPrincipal select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    IncidenteId,",
+                                               "    RutaHistoricaId,",
+                                               "    EsPrincipal",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarIncidenteRuta",
+                                               "SeleccionarIncidentes sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkIncidentesExcel",
+                                               "SeleccionarIncidenteRuta sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkIncidenteRutaExcel"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "Derivar2022"
+                                                   },
+                                                   {
+                                                       "name":  "Derivar2023"
+                                                   },
+                                                   {
+                                                       "name":  "UnirIncidentes"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarIncidentes"
+                                                   },
+                                                   {
+                                                       "name":  "ExpandirRutas"
+                                                   },
+                                                   {
+                                                       "name":  "MarcarPrincipal"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarIncidenteRuta"
+                                                   }
+                                               ]
+                       }
+}

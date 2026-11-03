@@ -1,0 +1,11 @@
+select * from bronze.Paradas;
+select * from bronze.Vehiculos;
+select * from bronze.viajes;
+
+select count(*) from bronze.Paradas;
+select count(*) from bronze.Vehiculos;
+select count(*) from bronze.viajes;
+
+delete from bronze.Paradas;
+delete from bronze.Vehiculos;
+delete from bronze.viajes;

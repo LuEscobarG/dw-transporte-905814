@@ -1,0 +1,20 @@
+{
+    "typeProperties":  {
+                           "columnDelimiter":  ",",
+                           "firstRowAsHeader":  true,
+                           "quoteChar":  "\"",
+                           "escapeChar":  "\\",
+                           "rowDelimiter":  "\n",
+                           "location":  {
+                                            "container":  "raw",
+                                            "folderPath":  "datos_csv",
+                                            "fileName":  "vehiculos.csv",
+                                            "type":  "AzureBlobStorageLocation"
+                                        }
+                       },
+    "type":  "DelimitedText",
+    "linkedServiceName":  {
+                              "referenceName":  "LS_Storage_Raw",
+                              "type":  "LinkedServiceReference"
+                          }
+}

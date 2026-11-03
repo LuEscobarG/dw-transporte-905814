@@ -1,0 +1,117 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceDemanda2022",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Demanda_2022",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           },
+                                           {
+                                               "name":  "SourceDemanda2023",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Demanda_2023",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkDemandaExcel",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_DemandaParadas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceDemanda2022",
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceDemanda2023",
+                                               "SourceDemanda2022 keyGenerate(output(fila as long),",
+                                               "startAt: 1L) ~\u003e Fila2022",
+                                               "SourceDemanda2023 keyGenerate(output(fila as long),",
+                                               "startAt: 1L) ~\u003e Fila2023",
+                                               "Fila2022 derive(",
+                                               "    AnioFuente = \u00272022\u0027,",
+                                               "    DemandaId = concat(\u0027DM-XLS-2022-\u0027, toString(fila)),",
+                                               "    FechaServicio = toString(byName(\u0027fecha_servicio\u0027)),",
+                                               "    RutaHistoricaId = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    ParadaHistoricaId = toString(byName(\u0027nro_parada\u0027)),",
+                                               "    Franja = toString(byName(\u0027franja\u0027)),",
+                                               "    ValidacionesTarjeta = toString(byName(\u0027estimacion_abordajes\u0027)),",
+                                               "    Descensos = toString(byName(\u0027estimacion_descensos\u0027)),",
+                                               "    DemandaNoAtendida = toString(byName(\u0027demanda_no_atendida\u0027)),",
+                                               "    Metodo = toString(byName(\u0027metodo\u0027))",
+                                               ") ~\u003e Derivar2022",
+                                               "Fila2023 derive(",
+                                               "    AnioFuente = \u00272023\u0027,",
+                                               "    DemandaId = concat(\u0027DM-XLS-2023-\u0027, toString(fila)),",
+                                               "    FechaServicio = toString(byName(\u0027fecha_servicio\u0027)),",
+                                               "    RutaHistoricaId = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    ParadaHistoricaId = toString(byName(\u0027nro_parada\u0027)),",
+                                               "    Franja = toString(byName(\u0027franja\u0027)),",
+                                               "    ValidacionesTarjeta = toString(byName(\u0027estimacion_abordajes\u0027)),",
+                                               "    Descensos = toString(byName(\u0027estimacion_descensos\u0027)),",
+                                               "    DemandaNoAtendida = toString(byName(\u0027demanda_no_atendida\u0027)),",
+                                               "    Metodo = toString(byName(\u0027metodo\u0027))",
+                                               ") ~\u003e Derivar2023",
+                                               "Derivar2022, Derivar2023 union(byName: true) ~\u003e UnirDemanda",
+                                               "UnirDemanda select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    DemandaId,",
+                                               "    FechaServicio,",
+                                               "    RutaHistoricaId,",
+                                               "    ParadaHistoricaId,",
+                                               "    Franja,",
+                                               "    ValidacionesTarjeta,",
+                                               "    Descensos,",
+                                               "    DemandaNoAtendida,",
+                                               "    Metodo",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarDemanda",
+                                               "SeleccionarDemanda sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkDemandaExcel"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "Fila2022"
+                                                   },
+                                                   {
+                                                       "name":  "Fila2023"
+                                                   },
+                                                   {
+                                                       "name":  "Derivar2022"
+                                                   },
+                                                   {
+                                                       "name":  "Derivar2023"
+                                                   },
+                                                   {
+                                                       "name":  "UnirDemanda"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarDemanda"
+                                                   }
+                                               ]
+                       }
+}

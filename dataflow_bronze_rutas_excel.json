@@ -1,0 +1,104 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceRutas2022",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Rutas_2022",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           },
+                                           {
+                                               "name":  "SourceRutas2023",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Rutas_2023",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkRutasExcel",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Rutas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceRutas2022",
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceRutas2023",
+                                               "SourceRutas2022 derive(",
+                                               "    AnioFuente = \u00272022\u0027,",
+                                               "    RutaHistoricaId = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    CodigoRuta = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    NombreRuta = toString(byName(\u0027nombre_ruta\u0027)),",
+                                               "    Origen = toString(byName(\u0027origen\u0027)),",
+                                               "    Destino = toString(byName(\u0027destino\u0027)),",
+                                               "    VigenciaDesde = toString(byName(\u0027fecha_desde\u0027)),",
+                                               "    VigenciaHasta = toString(byName(\u0027fecha_hasta\u0027)),",
+                                               "    Estado = toString(byName(\u0027estado\u0027))",
+                                               ") ~\u003e Derivar2022",
+                                               "SourceRutas2023 derive(",
+                                               "    AnioFuente = \u00272023\u0027,",
+                                               "    RutaHistoricaId = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    CodigoRuta = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    NombreRuta = toString(byName(\u0027nombre_ruta\u0027)),",
+                                               "    Origen = toString(byName(\u0027origen\u0027)),",
+                                               "    Destino = toString(byName(\u0027destino\u0027)),",
+                                               "    VigenciaDesde = toString(byName(\u0027fecha_desde\u0027)),",
+                                               "    VigenciaHasta = toString(byName(\u0027fecha_hasta\u0027)),",
+                                               "    Estado = toString(byName(\u0027estado\u0027))",
+                                               ") ~\u003e Derivar2023",
+                                               "Derivar2022, Derivar2023 union(byName: true) ~\u003e UnirRutas",
+                                               "UnirRutas select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    RutaHistoricaId,",
+                                               "    CodigoRuta,",
+                                               "    NombreRuta,",
+                                               "    Origen,",
+                                               "    Destino,",
+                                               "    VigenciaDesde,",
+                                               "    VigenciaHasta,",
+                                               "    Estado",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarRutas",
+                                               "SeleccionarRutas sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkRutasExcel"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "Derivar2022"
+                                                   },
+                                                   {
+                                                       "name":  "Derivar2023"
+                                                   },
+                                                   {
+                                                       "name":  "UnirRutas"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarRutas"
+                                                   }
+                                               ]
+                       }
+}

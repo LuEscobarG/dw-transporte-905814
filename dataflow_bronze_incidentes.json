@@ -1,0 +1,124 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceIncidentes",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_CSV_Incidentes",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkIncidentes",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Incidentes",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         },
+                                         {
+                                             "name":  "SinkIncidenteRuta",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_IncidenteRuta",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(output(",
+                                               "    id_incidente as string,",
+                                               "    tipo as string,",
+                                               "    severidad as string,",
+                                               "    fecha_inicio as string,",
+                                               "    hora_inicio as string,",
+                                               "    fecha_fin as string,",
+                                               "    hora_fin as string,",
+                                               "    fecha_registro as string,",
+                                               "    rutas_afectadas as string,",
+                                               "    vehiculo_afectado as string,",
+                                               "    descripcion as string",
+                                               "),",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false) ~\u003e SourceIncidentes",
+                                               "SourceIncidentes derive(",
+                                               "    AnioFuente = iif(instr(fecha_inicio, \u00272020\u0027) \u003e 0, \u00272020\u0027, \u00272021\u0027),",
+                                               "    IncidenteId = id_incidente,",
+                                               "    TipoIncidente = tipo,",
+                                               "    Severidad = severidad,",
+                                               "    FechaHoraInicio = concat(fecha_inicio, \u0027 \u0027, hora_inicio),",
+                                               "    FechaHoraFin = concat(fecha_fin, \u0027 \u0027, hora_fin),",
+                                               "    FechaHoraRegistro = fecha_registro,",
+                                               "    VehiculoId = vehiculo_afectado,",
+                                               "    Descripcion = descripcion",
+                                               ") ~\u003e DerivarBase",
+                                               "DerivarBase select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    IncidenteId,",
+                                               "    TipoIncidente,",
+                                               "    Severidad,",
+                                               "    FechaHoraInicio,",
+                                               "    FechaHoraFin,",
+                                               "    FechaHoraRegistro,",
+                                               "    VehiculoId,",
+                                               "    Descripcion",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true) ~\u003e SeleccionarIncidentes",
+                                               "DerivarBase derive(",
+                                               "    RutaHistoricaId = unfold(split(rutas_afectadas, \u0027|\u0027))",
+                                               ") ~\u003e ExpandirRutas",
+                                               "ExpandirRutas derive(",
+                                               "    EsPrincipal = iif(RutaHistoricaId == split(rutas_afectadas, \u0027|\u0027)[1], \u00271\u0027, \u00270\u0027)",
+                                               ") ~\u003e MarcarPrincipal",
+                                               "MarcarPrincipal select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    IncidenteId,",
+                                               "    RutaHistoricaId,",
+                                               "    EsPrincipal",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true) ~\u003e SeleccionarIncidenteRuta",
+                                               "SeleccionarIncidentes sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027) ~\u003e SinkIncidentes",
+                                               "SeleccionarIncidenteRuta sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027) ~\u003e SinkIncidenteRuta"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "DerivarBase"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarIncidentes"
+                                                   },
+                                                   {
+                                                       "name":  "ExpandirRutas"
+                                                   },
+                                                   {
+                                                       "name":  "MarcarPrincipal"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarIncidenteRuta"
+                                                   }
+                                               ]
+                       }
+}

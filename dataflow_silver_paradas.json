@@ -1,0 +1,115 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceBronzeParadas",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_Bronze_Paradas",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkSilverParadas",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Silver_Paradas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "format: \u0027table\u0027",
+                                               ") ~\u003e SourceBronzeParadas",
+                                               "SourceBronzeParadas derive(",
+                                               "    AnioFuenteLimpio = toShort(trim(toString(byName(\u0027AnioFuente\u0027)))),",
+                                               "    ParadaOriginal = upper(trim(toString(byName(\u0027ParadaHistoricaId\u0027)))),",
+                                               "    CodigoPublicadoLimpio = upper(trim(toString(byName(\u0027CodigoPublicado\u0027)))),",
+                                               "    NombreParadaLimpio = trim(toString(byName(\u0027NombreParada\u0027))),",
+                                               "    ZonaLimpia = trim(toString(byName(\u0027Zona\u0027))),",
+                                               "    LatitudLimpia = toDecimal(replace(trim(toString(byName(\u0027Latitud\u0027))), \u0027,\u0027, \u0027.\u0027), 9, 6),",
+                                               "    LongitudLimpia = toDecimal(replace(trim(toString(byName(\u0027Longitud\u0027))), \u0027,\u0027, \u0027.\u0027), 9, 6),",
+                                               "    VigenciaDesdeLimpia = case(",
+                                               "        isInteger(trim(toString(byName(\u0027VigenciaDesde\u0027)))),",
+                                               "            addDays(toDate(\u00271899-12-30\u0027), toInteger(trim(toString(byName(\u0027VigenciaDesde\u0027))))),",
+                                               "        instr(upper(trim(toString(byName(\u0027VigenciaDesde\u0027)))), \u0027AM\u0027) \u003e 0 || instr(upper(trim(toString(byName(\u0027VigenciaDesde\u0027)))), \u0027PM\u0027) \u003e 0,",
+                                               "            toDate(toTimestamp(trim(toString(byName(\u0027VigenciaDesde\u0027))), \u0027M/d/yyyy hh:mm:ss a\u0027)),",
+                                               "        instr(trim(toString(byName(\u0027VigenciaDesde\u0027))), \u0027/\u0027) \u003e 0,",
+                                               "            toDate(trim(toString(byName(\u0027VigenciaDesde\u0027))), \u0027dd/MM/yyyy\u0027),",
+                                               "        toDate(trim(toString(byName(\u0027VigenciaDesde\u0027))))",
+                                               "    ),",
+                                               "    VigenciaHastaLimpia = case(",
+                                               "        isInteger(trim(toString(byName(\u0027VigenciaHasta\u0027)))),",
+                                               "            addDays(toDate(\u00271899-12-30\u0027), toInteger(trim(toString(byName(\u0027VigenciaHasta\u0027))))),",
+                                               "        instr(upper(trim(toString(byName(\u0027VigenciaHasta\u0027)))), \u0027AM\u0027) \u003e 0 || instr(upper(trim(toString(byName(\u0027VigenciaHasta\u0027)))), \u0027PM\u0027) \u003e 0,",
+                                               "            toDate(toTimestamp(trim(toString(byName(\u0027VigenciaHasta\u0027))), \u0027M/d/yyyy hh:mm:ss a\u0027)),",
+                                               "        instr(trim(toString(byName(\u0027VigenciaHasta\u0027))), \u0027/\u0027) \u003e 0,",
+                                               "            toDate(trim(toString(byName(\u0027VigenciaHasta\u0027))), \u0027dd/MM/yyyy\u0027),",
+                                               "        toDate(trim(toString(byName(\u0027VigenciaHasta\u0027))))",
+                                               "    ),",
+                                               "    EstadoLimpio = upper(trim(toString(byName(\u0027Estado\u0027))))",
+                                               ") ~\u003e PrepararParadas",
+                                               "PrepararParadas derive(",
+                                               "    ParadaHistoricaIdLimpio = case(",
+                                               "        ParadaOriginal == \u0027P220-MC-NEW\u0027, \u0027P220-MC-NEW\u0027,",
+                                               "        ParadaOriginal == \u0027MC-01\u0027 \u0026\u0026 EstadoLimpio == \u0027ACTIVA\u0027, \u0027P220-MC-NEW\u0027,",
+                                               "        ParadaOriginal == \u0027MC-01\u0027, \u0027MC-01\u0027,",
+                                               "        ParadaOriginal",
+                                               "    )",
+                                               ") ~\u003e NormalizarParadas",
+                                               "NormalizarParadas window(",
+                                               "    over(ParadaHistoricaIdLimpio),",
+                                               "    desc(AnioFuenteLimpio, true),",
+                                               "    FilaParada = rowNumber()",
+                                               ") ~\u003e NumerarParadas",
+                                               "NumerarParadas filter(FilaParada == 1) ~\u003e ParadasUnicas",
+                                               "ParadasUnicas select(mapColumn(",
+                                               "    AnioFuente = AnioFuenteLimpio,",
+                                               "    ParadaHistoricaId = ParadaHistoricaIdLimpio,",
+                                               "    CodigoPublicado = CodigoPublicadoLimpio,",
+                                               "    NombreParada = NombreParadaLimpio,",
+                                               "    Zona = ZonaLimpia,",
+                                               "    Latitud = LatitudLimpia,",
+                                               "    Longitud = LongitudLimpia,",
+                                               "    VigenciaDesde = VigenciaDesdeLimpia,",
+                                               "    VigenciaHasta = VigenciaHastaLimpia,",
+                                               "    Estado = EstadoLimpio",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarParadas",
+                                               "SeleccionarParadas sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkSilverParadas"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "PrepararParadas"
+                                                   },
+                                                   {
+                                                       "name":  "NormalizarParadas"
+                                                   },
+                                                   {
+                                                       "name":  "NumerarParadas"
+                                                   },
+                                                   {
+                                                       "name":  "ParadasUnicas"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarParadas"
+                                                   }
+                                               ]
+                       }
+}

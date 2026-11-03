@@ -1,0 +1,118 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceBronzeRutas",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_Bronze_Rutas",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkSilverRutas",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Silver_Rutas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "format: \u0027table\u0027",
+                                               ") ~\u003e SourceBronzeRutas",
+                                               "SourceBronzeRutas derive(",
+                                               "    AnioFuenteLimpio = toShort(trim(toString(byName(\u0027AnioFuente\u0027)))),",
+                                               "    RutaOriginal = upper(trim(toString(byName(\u0027RutaHistoricaId\u0027)))),",
+                                               "    CodigoRutaLimpio = upper(trim(toString(byName(\u0027CodigoRuta\u0027)))),",
+                                               "    NombreRutaLimpio = trim(toString(byName(\u0027NombreRuta\u0027))),",
+                                               "    OrigenLimpio = trim(toString(byName(\u0027Origen\u0027))),",
+                                               "    DestinoLimpio = trim(toString(byName(\u0027Destino\u0027))),",
+                                               "    VigenciaDesdeLimpia = case(",
+                                               "        isInteger(trim(toString(byName(\u0027VigenciaDesde\u0027)))),",
+                                               "            addDays(toDate(\u00271899-12-30\u0027), toInteger(trim(toString(byName(\u0027VigenciaDesde\u0027))))),",
+                                               "        instr(upper(trim(toString(byName(\u0027VigenciaDesde\u0027)))), \u0027AM\u0027) \u003e 0 || instr(upper(trim(toString(byName(\u0027VigenciaDesde\u0027)))), \u0027PM\u0027) \u003e 0,",
+                                               "            toDate(toTimestamp(trim(toString(byName(\u0027VigenciaDesde\u0027))), \u0027M/d/yyyy hh:mm:ss a\u0027)),",
+                                               "        instr(trim(toString(byName(\u0027VigenciaDesde\u0027))), \u0027/\u0027) \u003e 0,",
+                                               "            toDate(trim(toString(byName(\u0027VigenciaDesde\u0027))), \u0027dd/MM/yyyy\u0027),",
+                                               "        toDate(trim(toString(byName(\u0027VigenciaDesde\u0027))))",
+                                               "    ),",
+                                               "    VigenciaHastaLimpia = case(",
+                                               "        isInteger(trim(toString(byName(\u0027VigenciaHasta\u0027)))),",
+                                               "            addDays(toDate(\u00271899-12-30\u0027), toInteger(trim(toString(byName(\u0027VigenciaHasta\u0027))))),",
+                                               "        instr(upper(trim(toString(byName(\u0027VigenciaHasta\u0027)))), \u0027AM\u0027) \u003e 0 || instr(upper(trim(toString(byName(\u0027VigenciaHasta\u0027)))), \u0027PM\u0027) \u003e 0,",
+                                               "            toDate(toTimestamp(trim(toString(byName(\u0027VigenciaHasta\u0027))), \u0027M/d/yyyy hh:mm:ss a\u0027)),",
+                                               "        instr(trim(toString(byName(\u0027VigenciaHasta\u0027))), \u0027/\u0027) \u003e 0,",
+                                               "            toDate(trim(toString(byName(\u0027VigenciaHasta\u0027))), \u0027dd/MM/yyyy\u0027),",
+                                               "        toDate(trim(toString(byName(\u0027VigenciaHasta\u0027))))",
+                                               "    ),",
+                                               "    EstadoLimpio = upper(trim(toString(byName(\u0027Estado\u0027))))",
+                                               ") ~\u003e PrepararRutas",
+                                               "PrepararRutas derive(",
+                                               "    RutaHistoricaIdLimpio = case(",
+                                               "        RutaOriginal == \u0027RH-07-NEW\u0027, \u0027RH-07-NEW\u0027,",
+                                               "        RutaOriginal == \u0027RH-12-N\u0027, \u0027RH-12-N\u0027,",
+                                               "        RutaOriginal == \u0027R12-N\u0027, \u0027RH-12-N\u0027,",
+                                               "        CodigoRutaLimpio == \u0027R12-N\u0027, \u0027RH-12-N\u0027,",
+                                               "        RutaOriginal == \u0027RH-12-S\u0027, \u0027RH-12-S\u0027,",
+                                               "        RutaOriginal == \u0027R12-S\u0027, \u0027RH-12-S\u0027,",
+                                               "        CodigoRutaLimpio == \u0027R12-S\u0027, \u0027RH-12-S\u0027,",
+                                               "        startsWith(RutaOriginal, \u0027RH-\u0027), RutaOriginal,",
+                                               "        concat(\u0027RH-\u0027, lpad(regexExtract(RutaOriginal, \u0027(\\\\d+)\u0027, 1), 2, \u00270\u0027))",
+                                               "    )",
+                                               ") ~\u003e NormalizarRutas",
+                                               "NormalizarRutas window(",
+                                               "    over(RutaHistoricaIdLimpio),",
+                                               "    desc(AnioFuenteLimpio, true),",
+                                               "    FilaRuta = rowNumber()",
+                                               ") ~\u003e NumerarRutas",
+                                               "NumerarRutas filter(FilaRuta == 1) ~\u003e RutasUnicas",
+                                               "RutasUnicas select(mapColumn(",
+                                               "    AnioFuente = AnioFuenteLimpio,",
+                                               "    RutaHistoricaId = RutaHistoricaIdLimpio,",
+                                               "    CodigoRuta = CodigoRutaLimpio,",
+                                               "    NombreRuta = NombreRutaLimpio,",
+                                               "    Origen = OrigenLimpio,",
+                                               "    Destino = DestinoLimpio,",
+                                               "    VigenciaDesde = VigenciaDesdeLimpia,",
+                                               "    VigenciaHasta = VigenciaHastaLimpia,",
+                                               "    Estado = EstadoLimpio",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarRutas",
+                                               "SeleccionarRutas sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkSilverRutas"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "PrepararRutas"
+                                                   },
+                                                   {
+                                                       "name":  "NormalizarRutas"
+                                                   },
+                                                   {
+                                                       "name":  "NumerarRutas"
+                                                   },
+                                                   {
+                                                       "name":  "RutasUnicas"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarRutas"
+                                                   }
+                                               ]
+                       }
+}

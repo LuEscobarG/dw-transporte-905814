@@ -1,0 +1,87 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceViajes",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_CSV_Viajes",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkViajes",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Viajes",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(output(",
+                                               "    id_viaje as string,",
+                                               "    cod_ruta as string,",
+                                               "    nro_bus as string,",
+                                               "    fec_servicio as string,",
+                                               "    hora_programada as string,",
+                                               "    hora_salida as string,",
+                                               "    hora_llegada as string,",
+                                               "    pasajeros_reportados as string,",
+                                               "    km_recorridos as string,",
+                                               "    estado_viaje as string,",
+                                               "    tipo_metrica as string",
+                                               "),",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false) ~\u003e SourceViajes",
+                                               "SourceViajes derive(",
+                                               "    AnioFuente = iif(instr(fec_servicio, \u00272020\u0027) \u003e 0, \u00272020\u0027, \u00272021\u0027),",
+                                               "    ViajeId = id_viaje,",
+                                               "    RutaHistoricaId = cod_ruta,",
+                                               "    VehiculoId = nro_bus,",
+                                               "    FechaServicio = fec_servicio,",
+                                               "    HoraProgramada = hora_programada,",
+                                               "    HoraSalida = hora_salida,",
+                                               "    HoraLlegada = hora_llegada,",
+                                               "    ValidacionesTarjeta = pasajeros_reportados,",
+                                               "    KmRecorridos = km_recorridos,",
+                                               "    EstadoViaje = estado_viaje",
+                                               ") ~\u003e DerivarViajes",
+                                               "DerivarViajes select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    ViajeId,",
+                                               "    RutaHistoricaId,",
+                                               "    VehiculoId,",
+                                               "    FechaServicio,",
+                                               "    HoraProgramada,",
+                                               "    HoraSalida,",
+                                               "    HoraLlegada,",
+                                               "    ValidacionesTarjeta,",
+                                               "    KmRecorridos,",
+                                               "    EstadoViaje",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true) ~\u003e SeleccionarViajes",
+                                               "SeleccionarViajes sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027) ~\u003e SinkViajes"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "DerivarViajes"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarViajes"
+                                                   }
+                                               ]
+                       }
+}

@@ -1,0 +1,84 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceRutas",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_CSV_Rutas",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkRutas",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Rutas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(output(",
+                                               "    cod_ruta as string,",
+                                               "    nombre_ruta as string,",
+                                               "    origen as string,",
+                                               "    destino as string,",
+                                               "    fecha_desde as string,",
+                                               "    fecha_hasta as string,",
+                                               "    estado as string",
+                                               "),",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false) ~\u003e SourceRutas",
+                                               "SourceRutas keyGenerate(output(fila as long),",
+                                               "startAt: 1L) ~\u003e ConFila",
+                                               "ConFila derive(",
+                                               "    AnioFuente = iif(fila \u003c= 48L, \u00272020\u0027, \u00272021\u0027),",
+                                               "    RutaHistoricaId = cod_ruta,",
+                                               "    CodigoRuta = cod_ruta,",
+                                               "    NombreRuta = nombre_ruta,",
+                                               "    Origen = origen,",
+                                               "    Destino = destino,",
+                                               "    VigenciaDesde = fecha_desde,",
+                                               "    VigenciaHasta = fecha_hasta,",
+                                               "    Estado = estado",
+                                               ") ~\u003e DerivarRutas",
+                                               "DerivarRutas select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    RutaHistoricaId,",
+                                               "    CodigoRuta,",
+                                               "    NombreRuta,",
+                                               "    Origen,",
+                                               "    Destino,",
+                                               "    VigenciaDesde,",
+                                               "    VigenciaHasta,",
+                                               "    Estado",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true) ~\u003e SeleccionarRutas",
+                                               "SeleccionarRutas sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027) ~\u003e SinkRutas"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "ConFila"
+                                                   },
+                                                   {
+                                                       "name":  "DerivarRutas"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarRutas"
+                                                   }
+                                               ]
+                       }
+}

@@ -1,0 +1,17 @@
+{
+    "typeProperties":  {
+                           "sheetName":  "Incidentes",
+                           "location":  {
+                                            "container":  "raw",
+                                            "folderPath":  "datos_xls",
+                                            "fileName":  "operacion_2023.xlsx",
+                                            "type":  "AzureBlobStorageLocation"
+                                        },
+                           "firstRowAsHeader":  true
+                       },
+    "type":  "Excel",
+    "linkedServiceName":  {
+                              "referenceName":  "LS_Storage_Raw",
+                              "type":  "LinkedServiceReference"
+                          }
+}

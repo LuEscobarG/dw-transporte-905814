@@ -1,0 +1,181 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceBronzeViajes",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_Bronze_Viajes",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkSilverViajes",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Silver_Viajes",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "format: \u0027table\u0027",
+                                               ") ~\u003e SourceBronzeViajes",
+                                               "SourceBronzeViajes filter(",
+                                               "!startsWith(upper(trim(toString(byName(\u0027ViajeId\u0027)))), \u0027TOTAL_\u0027)",
+                                               ") ~\u003e FiltrarViajes",
+                                               "FiltrarViajes derive(",
+                                               "    AnioFuenteLimpio = toShort(trim(toString(byName(\u0027AnioFuente\u0027)))),",
+                                               "    ViajeOriginal = upper(trim(toString(byName(\u0027ViajeId\u0027)))),",
+                                               "    RutaOriginal = upper(trim(toString(byName(\u0027RutaHistoricaId\u0027)))),",
+                                               "    VehiculoOriginal = upper(trim(toString(byName(\u0027VehiculoId\u0027)))),",
+                                               "    FechaServicioLimpia = case(",
+                                               "        isInteger(trim(toString(byName(\u0027FechaServicio\u0027)))),",
+                                               "            addDays(toDate(\u00271899-12-30\u0027), toInteger(trim(toString(byName(\u0027FechaServicio\u0027))))),",
+                                               "        instr(upper(trim(toString(byName(\u0027FechaServicio\u0027)))), \u0027AM\u0027) \u003e 0 || instr(upper(trim(toString(byName(\u0027FechaServicio\u0027)))), \u0027PM\u0027) \u003e 0,",
+                                               "            toDate(toTimestamp(trim(toString(byName(\u0027FechaServicio\u0027))), \u0027M/d/yyyy hh:mm:ss a\u0027)),",
+                                               "        instr(trim(toString(byName(\u0027FechaServicio\u0027))), \u0027/\u0027) \u003e 0,",
+                                               "            toDate(trim(toString(byName(\u0027FechaServicio\u0027))), \u0027dd/MM/yyyy\u0027),",
+                                               "        toDate(trim(toString(byName(\u0027FechaServicio\u0027))))",
+                                               "    ),",
+                                               "    HoraProgramadaRaw = trim(toString(byName(\u0027HoraProgramada\u0027))),",
+                                               "    HoraSalidaRaw = trim(toString(byName(\u0027HoraSalida\u0027))),",
+                                               "    HoraLlegadaRaw = trim(toString(byName(\u0027HoraLlegada\u0027))),",
+                                               "    ValidacionesLimpias = toInteger(trim(toString(byName(\u0027ValidacionesTarjeta\u0027)))),",
+                                               "    KmLimpios = toDecimal(replace(trim(toString(byName(\u0027KmRecorridos\u0027))), \u0027,\u0027, \u0027.\u0027), 8, 1),",
+                                               "    EstadoViajeLimpio = upper(trim(toString(byName(\u0027EstadoViaje\u0027))))",
+                                               ") ~\u003e PrepararViajes",
+                                               "PrepararViajes derive(",
+                                               "    ViajeIdLimpio = case(",
+                                               "        startsWith(ViajeOriginal, \u0027VJ-\u0027), ViajeOriginal,",
+                                               "        concat(\u0027VJ-\u0027, toString(AnioFuenteLimpio), \u0027-\u0027, ViajeOriginal)",
+                                               "    ),",
+                                               "    RutaHistoricaIdLimpio = case(",
+                                               "        RutaOriginal == \u0027RH-07-NEW\u0027, \u0027RH-07-NEW\u0027,",
+                                               "        RutaOriginal == \u0027RH-12-N\u0027, \u0027RH-12-N\u0027,",
+                                               "        RutaOriginal == \u0027R12-N\u0027, \u0027RH-12-N\u0027,",
+                                               "        RutaOriginal == \u0027RH-12-S\u0027, \u0027RH-12-S\u0027,",
+                                               "        RutaOriginal == \u0027R12-S\u0027, \u0027RH-12-S\u0027,",
+                                               "        startsWith(RutaOriginal, \u0027RH-\u0027), RutaOriginal,",
+                                               "        concat(\u0027RH-\u0027, lpad(regexExtract(RutaOriginal, \u0027(\\\\d+)\u0027, 1), 2, \u00270\u0027))",
+                                               "    ),",
+                                               "    VehiculoBase = case(",
+                                               "        startsWith(VehiculoOriginal, \u0027V-\u0027), VehiculoOriginal,",
+                                               "        concat(\u0027V-\u0027, lpad(regexExtract(VehiculoOriginal, \u0027(\\\\d+)\u0027, 1), 3, \u00270\u0027))",
+                                               "    )",
+                                               ") ~\u003e NormalizarViajes",
+                                               "NormalizarViajes derive(",
+                                               "    HoraProgramadaTexto = case(",
+                                               "        instr(HoraProgramadaRaw, \u0027T\u0027) \u003e 0,",
+                                               "            substring(HoraProgramadaRaw, instr(HoraProgramadaRaw, \u0027T\u0027) + 1, 8),",
+                                               "        length(HoraProgramadaRaw) \u003e= 8,",
+                                               "            left(HoraProgramadaRaw, 8),",
+                                               "        concat(HoraProgramadaRaw, \u0027:00\u0027)",
+                                               "    ),",
+                                               "    HoraSalidaTexto = case(",
+                                               "        instr(HoraSalidaRaw, \u0027T\u0027) \u003e 0,",
+                                               "            substring(HoraSalidaRaw, instr(HoraSalidaRaw, \u0027T\u0027) + 1, 8),",
+                                               "        length(HoraSalidaRaw) \u003e= 8,",
+                                               "            left(HoraSalidaRaw, 8),",
+                                               "        concat(HoraSalidaRaw, \u0027:00\u0027)",
+                                               "    ),",
+                                               "    HoraLlegadaTexto = case(",
+                                               "        instr(HoraLlegadaRaw, \u0027T\u0027) \u003e 0,",
+                                               "            substring(HoraLlegadaRaw, instr(HoraLlegadaRaw, \u0027T\u0027) + 1, 8),",
+                                               "        length(HoraLlegadaRaw) \u003e= 8,",
+                                               "            left(HoraLlegadaRaw, 8),",
+                                               "        concat(HoraLlegadaRaw, \u0027:00\u0027)",
+                                               "    )",
+                                               ") ~\u003e PrepararHoras",
+                                               "PrepararHoras derive(",
+                                               "    VehiculoIdLimpio = iif(",
+                                               "        VehiculoBase == \u0027V-043\u0027 \u0026\u0026 AnioFuenteLimpio \u003c= 2023,",
+                                               "        \u0027V-043-OLD\u0027,",
+                                               "        VehiculoBase",
+                                               "    ),",
+                                               "    HoraProgramadaLimpia = toTimestamp(",
+                                               "        concat(\u00271970-01-01 \u0027, HoraProgramadaTexto),",
+                                               "        \u0027yyyy-MM-dd HH:mm:ss\u0027",
+                                               "    ),",
+                                               "    HoraSalidaLimpia = toTimestamp(",
+                                               "        concat(\u00271970-01-01 \u0027, HoraSalidaTexto),",
+                                               "        \u0027yyyy-MM-dd HH:mm:ss\u0027",
+                                               "    ),",
+                                               "    HoraLlegadaLimpia = toTimestamp(",
+                                               "        concat(\u00271970-01-01 \u0027, HoraLlegadaTexto),",
+                                               "        \u0027yyyy-MM-dd HH:mm:ss\u0027",
+                                               "    )",
+                                               ") ~\u003e FinalizarViajes",
+                                               "FinalizarViajes window(",
+                                               "    over(ViajeIdLimpio),",
+                                               "    desc(AnioFuenteLimpio, true),",
+                                               "    FilaViaje = rowNumber()",
+                                               ") ~\u003e NumerarViajes",
+                                               "NumerarViajes filter(FilaViaje == 1) ~\u003e ViajesUnicos",
+                                               "ViajesUnicos select(mapColumn(",
+                                               "    AnioFuente = AnioFuenteLimpio,",
+                                               "    ViajeId = ViajeIdLimpio,",
+                                               "    RutaHistoricaId = RutaHistoricaIdLimpio,",
+                                               "    VehiculoId = VehiculoIdLimpio,",
+                                               "    FechaServicio = FechaServicioLimpia,",
+                                               "    HoraProgramada = HoraProgramadaLimpia,",
+                                               "    HoraSalida = HoraSalidaLimpia,",
+                                               "    HoraLlegada = HoraLlegadaLimpia,",
+                                               "    ValidacionesTarjeta = ValidacionesLimpias,",
+                                               "    KmRecorridos = KmLimpios,",
+                                               "    EstadoViaje = EstadoViajeLimpio",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarViajes",
+                                               "SeleccionarViajes alterRow(",
+                                               "    upsertIf(true())",
+                                               ") ~\u003e MarcarUpsert",
+                                               "MarcarUpsert sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: false,",
+                                               "updateable: false,",
+                                               "upsertable: true,",
+                                               "keys:[\u0027ViajeId\u0027],",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkSilverViajes"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "FiltrarViajes"
+                                                   },
+                                                   {
+                                                       "name":  "PrepararViajes"
+                                                   },
+                                                   {
+                                                       "name":  "NormalizarViajes"
+                                                   },
+                                                   {
+                                                       "name":  "PrepararHoras"
+                                                   },
+                                                   {
+                                                       "name":  "FinalizarViajes"
+                                                   },
+                                                   {
+                                                       "name":  "NumerarViajes"
+                                                   },
+                                                   {
+                                                       "name":  "ViajesUnicos"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarViajes"
+                                                   },
+                                                   {
+                                                       "name":  "MarcarUpsert"
+                                                   }
+                                               ]
+                       }
+}

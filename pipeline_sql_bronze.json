@@ -1,0 +1,166 @@
+{
+    "activities":  [
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_Paradas",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_Paradas",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "writeBehavior":  "insert",
+                                                               "type":  "AzureSqlSink",
+                                                               "preCopyScript":  "TRUNCATE TABLE bronze.ParadasAzure;"
+                                                           },
+                                                  "source":  {
+                                                                 "partitionOption":  "None",
+                                                                 "type":  "AzureSqlSource"
+                                                             }
+                                              },
+                           "name":  "Copiar_Paradas_ERP_a_Bronze",
+                           "type":  "Copy"
+                       },
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_Vehiculos",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_Vehiculos",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "writeBehavior":  "insert",
+                                                               "type":  "AzureSqlSink",
+                                                               "preCopyScript":  "TRUNCATE TABLE bronze.VehiculosAzure;"
+                                                           },
+                                                  "source":  {
+                                                                 "partitionOption":  "None",
+                                                                 "type":  "AzureSqlSource"
+                                                             }
+                                              },
+                           "name":  "Copiar_Vehiculos_ERP_a_Bronze",
+                           "type":  "Copy"
+                       },
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_Viajes",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_Viajes",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "writeBehavior":  "insert",
+                                                               "type":  "AzureSqlSink",
+                                                               "preCopyScript":  "TRUNCATE TABLE bronze.ViajesAzure;"
+                                                           },
+                                                  "source":  {
+                                                                 "partitionOption":  "None",
+                                                                 "type":  "AzureSqlSource"
+                                                             }
+                                              },
+                           "name":  "Copiar_Viajes_ERP_a_Bronze",
+                           "type":  "Copy"
+                       },
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_DemandaParadas",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_DemandaParadas",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "writeBehavior":  "insert",
+                                                               "type":  "AzureSqlSink",
+                                                               "preCopyScript":  "TRUNCATE TABLE bronze.DemandaParadasAzure;"
+                                                           },
+                                                  "source":  {
+                                                                 "partitionOption":  "None",
+                                                                 "type":  "AzureSqlSource"
+                                                             }
+                                              },
+                           "name":  "Copiar_DemandaParadas_ERP_a_Bronze",
+                           "type":  "Copy"
+                       },
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_Incidentes",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_Incidentes",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "writeBehavior":  "insert",
+                                                               "type":  "AzureSqlSink",
+                                                               "preCopyScript":  "TRUNCATE TABLE bronze.IncidentesAzure;"
+                                                           },
+                                                  "source":  {
+                                                                 "partitionOption":  "None",
+                                                                 "type":  "AzureSqlSource"
+                                                             }
+                                              },
+                           "name":  "Copiar_Incidentes_ERP_a_Bronze",
+                           "type":  "Copy"
+                       },
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_IncidenteRuta",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_IncidenteRuta",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "writeBehavior":  "insert",
+                                                               "type":  "AzureSqlSink",
+                                                               "preCopyScript":  "TRUNCATE TABLE bronze.IncidenteRutaAzure;"
+                                                           },
+                                                  "source":  {
+                                                                 "partitionOption":  "None",
+                                                                 "type":  "AzureSqlSource"
+                                                             }
+                                              },
+                           "name":  "Copiar_IncidenteRuta_ERP_a_Bronze",
+                           "type":  "Copy"
+                       }
+                   ]
+}

@@ -1,0 +1,27 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+
+# Variables sensibles
+*.tfvars
+*.tfvars.json
+
+# Backups
+*.bak
+
+# Archivos del sistema/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Azure linked services con posibles credenciales
+linked_sql_dw.json
+linked_sql_erp.json
+linked_storage.json
+
+# Salidas generadas
+salidas/

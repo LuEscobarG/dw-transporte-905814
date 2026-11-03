@@ -1,0 +1,19 @@
+{
+    "activities":  [
+                       {
+                           "typeProperties":  {
+                                                  "dataflow":  {
+                                                                   "referenceName":  "DF_Bronze_Incidentes_Excel",
+                                                                   "type":  "DataFlowReference"
+                                                               },
+                                                  "traceLevel":  "Fine",
+                                                  "compute":  {
+                                                                  "coreCount":  8,
+                                                                  "computeType":  "General"
+                                                              }
+                                              },
+                           "name":  "Ejecutar_DF_Bronze_Incidentes_Excel",
+                           "type":  "ExecuteDataFlow"
+                       }
+                   ]
+}

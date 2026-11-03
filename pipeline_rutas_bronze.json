@@ -1,0 +1,30 @@
+{
+    "activities":  [
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_Rutas",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_Rutas",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "type":  "AzureSqlSink",
+                                                               "writeBehavior":  "insert"
+                                                           },
+                                                  "source":  {
+                                                                 "partitionOption":  "None",
+                                                                 "type":  "AzureSqlSource"
+                                                             }
+                                              },
+                           "name":  "Copiar_Rutas_ERP_a_Bronze",
+                           "type":  "Copy"
+                       }
+                   ]
+}

@@ -1,0 +1,11 @@
+{
+    "typeProperties":  {
+                           "table":  "ParadasAzure",
+                           "schema":  "bronze"
+                       },
+    "type":  "AzureSqlTable",
+    "linkedServiceName":  {
+                              "referenceName":  "LS_SQL_DW",
+                              "type":  "LinkedServiceReference"
+                          }
+}

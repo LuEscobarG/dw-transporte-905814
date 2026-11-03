@@ -1,0 +1,32 @@
+{
+    "activities":  [
+                       {
+                           "outputs":  [
+                                           {
+                                               "referenceName":  "DS_Bronze_Viajes",
+                                               "type":  "DatasetReference"
+                                           }
+                                       ],
+                           "inputs":  [
+                                          {
+                                              "referenceName":  "DS_ERP_Viajes",
+                                              "type":  "DatasetReference"
+                                          }
+                                      ],
+                           "typeProperties":  {
+                                                  "sink":  {
+                                                               "writeBehavior":  "insert",
+                                                               "type":  "AzureSqlSink",
+                                                               "preCopyScript":  "TRUNCATE TABLE bronze.ViajesAzure;"
+                                                           },
+                                                  "source":  {
+                                                                 "sqlReaderQuery":  "SELECT\n    AnioFuente,\n    ViajeId,\n    RutaHistoricaId,\n    VehiculoId,\n    FechaServicio,\n    CAST(HoraProgramada AS VARCHAR(30)) AS HoraProgramada,\n    CAST(HoraSalida AS VARCHAR(30)) AS HoraSalida,\n    CAST(HoraLlegada AS VARCHAR(30)) AS HoraLlegada,\n    ValidacionesTarjeta,\n    KmRecorridos,\n    EstadoViaje\nFROM dbo.ViajesAzure",
+                                                                 "type":  "AzureSqlSource",
+                                                                 "partitionOption":  "None"
+                                                             }
+                                              },
+                           "name":  "Copiar_Viajes_ERP_a_Bronze",
+                           "type":  "Copy"
+                       }
+                   ]
+}

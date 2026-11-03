@@ -1,0 +1,107 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceParadas2022",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Paradas_2022",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           },
+                                           {
+                                               "name":  "SourceParadas2023",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Paradas_2023",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkParadasExcel",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Paradas",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceParadas2022",
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceParadas2023",
+                                               "SourceParadas2022 derive(",
+                                               "    AnioFuente = \u00272022\u0027,",
+                                               "    ParadaHistoricaId = toString(byName(\u0027nro_parada\u0027)),",
+                                               "    CodigoPublicado = toString(byName(\u0027nro_parada\u0027)),",
+                                               "    NombreParada = toString(byName(\u0027nombre_parada\u0027)),",
+                                               "    Zona = toString(byName(\u0027zona\u0027)),",
+                                               "    Latitud = toString(byName(\u0027latitud\u0027)),",
+                                               "    Longitud = toString(byName(\u0027longitud\u0027)),",
+                                               "    VigenciaDesde = toString(byName(\u0027fecha_desde\u0027)),",
+                                               "    VigenciaHasta = toString(byName(\u0027fecha_hasta\u0027)),",
+                                               "    Estado = toString(byName(\u0027estado\u0027))",
+                                               ") ~\u003e Derivar2022",
+                                               "SourceParadas2023 derive(",
+                                               "    AnioFuente = \u00272023\u0027,",
+                                               "    ParadaHistoricaId = toString(byName(\u0027nro_parada\u0027)),",
+                                               "    CodigoPublicado = toString(byName(\u0027nro_parada\u0027)),",
+                                               "    NombreParada = toString(byName(\u0027nombre_parada\u0027)),",
+                                               "    Zona = toString(byName(\u0027zona\u0027)),",
+                                               "    Latitud = toString(byName(\u0027latitud\u0027)),",
+                                               "    Longitud = toString(byName(\u0027longitud\u0027)),",
+                                               "    VigenciaDesde = toString(byName(\u0027fecha_desde\u0027)),",
+                                               "    VigenciaHasta = toString(byName(\u0027fecha_hasta\u0027)),",
+                                               "    Estado = toString(byName(\u0027estado\u0027))",
+                                               ") ~\u003e Derivar2023",
+                                               "Derivar2022, Derivar2023 union(byName: true) ~\u003e UnirParadas",
+                                               "UnirParadas select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    ParadaHistoricaId,",
+                                               "    CodigoPublicado,",
+                                               "    NombreParada,",
+                                               "    Zona,",
+                                               "    Latitud,",
+                                               "    Longitud,",
+                                               "    VigenciaDesde,",
+                                               "    VigenciaHasta,",
+                                               "    Estado",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarParadas",
+                                               "SeleccionarParadas sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkParadasExcel"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "Derivar2022"
+                                                   },
+                                                   {
+                                                       "name":  "Derivar2023"
+                                                   },
+                                                   {
+                                                       "name":  "UnirParadas"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarParadas"
+                                                   }
+                                               ]
+                       }
+}

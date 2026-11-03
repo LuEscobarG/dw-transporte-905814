@@ -1,0 +1,110 @@
+{
+    "typeProperties":  {
+                           "sources":  [
+                                           {
+                                               "name":  "SourceViajes2022",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Viajes_2022",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           },
+                                           {
+                                               "name":  "SourceViajes2023",
+                                               "dataset":  {
+                                                               "referenceName":  "DS_XLS_Viajes_2023",
+                                                               "type":  "DatasetReference"
+                                                           }
+                                           }
+                                       ],
+                           "sinks":  [
+                                         {
+                                             "name":  "SinkViajesExcel",
+                                             "dataset":  {
+                                                             "referenceName":  "DS_Bronze_Viajes",
+                                                             "type":  "DatasetReference"
+                                                         }
+                                         }
+                                     ],
+                           "scriptLines":  [
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceViajes2022",
+                                               "source(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "ignoreNoFilesFound: false",
+                                               ") ~\u003e SourceViajes2023",
+                                               "SourceViajes2022 derive(",
+                                               "    AnioFuente = \u00272022\u0027,",
+                                               "    ViajeId = toString(byName(\u0027id_viaje\u0027)),",
+                                               "    RutaHistoricaId = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    VehiculoId = toString(byName(\u0027nro_bus\u0027)),",
+                                               "    FechaServicio = toString(byName(\u0027fecha_servicio\u0027)),",
+                                               "    HoraProgramada = toString(byName(\u0027hora_programada\u0027)),",
+                                               "    HoraSalida = toString(byName(\u0027hora_salida\u0027)),",
+                                               "    HoraLlegada = toString(byName(\u0027hora_llegada\u0027)),",
+                                               "    ValidacionesTarjeta = toString(byName(\u0027pasajeros_estimados\u0027)),",
+                                               "    KmRecorridos = toString(byName(\u0027km_recorridos\u0027)),",
+                                               "    EstadoViaje = toString(byName(\u0027estado_viaje\u0027))",
+                                               ") ~\u003e Derivar2022",
+                                               "SourceViajes2023 derive(",
+                                               "    AnioFuente = \u00272023\u0027,",
+                                               "    ViajeId = toString(byName(\u0027id_viaje\u0027)),",
+                                               "    RutaHistoricaId = toString(byName(\u0027cod_ruta\u0027)),",
+                                               "    VehiculoId = toString(byName(\u0027nro_bus\u0027)),",
+                                               "    FechaServicio = toString(byName(\u0027fecha_servicio\u0027)),",
+                                               "    HoraProgramada = toString(byName(\u0027hora_programada\u0027)),",
+                                               "    HoraSalida = toString(byName(\u0027hora_salida\u0027)),",
+                                               "    HoraLlegada = toString(byName(\u0027hora_llegada\u0027)),",
+                                               "    ValidacionesTarjeta = toString(byName(\u0027pasajeros_estimados\u0027)),",
+                                               "    KmRecorridos = toString(byName(\u0027km_recorridos\u0027)),",
+                                               "    EstadoViaje = toString(byName(\u0027estado_viaje\u0027))",
+                                               ") ~\u003e Derivar2023",
+                                               "Derivar2022, Derivar2023 union(byName: true) ~\u003e UnirViajes",
+                                               "UnirViajes select(mapColumn(",
+                                               "    AnioFuente,",
+                                               "    ViajeId,",
+                                               "    RutaHistoricaId,",
+                                               "    VehiculoId,",
+                                               "    FechaServicio,",
+                                               "    HoraProgramada,",
+                                               "    HoraSalida,",
+                                               "    HoraLlegada,",
+                                               "    ValidacionesTarjeta,",
+                                               "    KmRecorridos,",
+                                               "    EstadoViaje",
+                                               "),",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true",
+                                               ") ~\u003e SeleccionarViajes",
+                                               "SeleccionarViajes sink(",
+                                               "allowSchemaDrift: true,",
+                                               "validateSchema: false,",
+                                               "deletable: false,",
+                                               "insertable: true,",
+                                               "updateable: false,",
+                                               "upsertable: false,",
+                                               "format: \u0027table\u0027,",
+                                               "skipDuplicateMapInputs: true,",
+                                               "skipDuplicateMapOutputs: true,",
+                                               "errorHandlingOption: \u0027stopOnFirstError\u0027",
+                                               ") ~\u003e SinkViajesExcel"
+                                           ],
+                           "transformations":  [
+                                                   {
+                                                       "name":  "Derivar2022"
+                                                   },
+                                                   {
+                                                       "name":  "Derivar2023"
+                                                   },
+                                                   {
+                                                       "name":  "UnirViajes"
+                                                   },
+                                                   {
+                                                       "name":  "SeleccionarViajes"
+                                                   }
+                                               ]
+                       }
+}

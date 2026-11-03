@@ -1,0 +1,19 @@
+{
+    "activities":  [
+                       {
+                           "typeProperties":  {
+                                                  "dataflow":  {
+                                                                   "referenceName":  "DF_Silver_Vehiculos",
+                                                                   "type":  "DataFlowReference"
+                                                               },
+                                                  "traceLevel":  "Fine",
+                                                  "compute":  {
+                                                                  "coreCount":  8,
+                                                                  "computeType":  "General"
+                                                              }
+                                              },
+                           "name":  "Ejecutar_DF_Silver_Vehiculos",
+                           "type":  "ExecuteDataFlow"
+                       }
+                   ]
+}

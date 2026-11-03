@@ -1,0 +1,11 @@
+{
+    "typeProperties":  {
+                           "table":  "VehiculosAzure",
+                           "schema":  "dbo"
+                       },
+    "type":  "AzureSqlTable",
+    "linkedServiceName":  {
+                              "referenceName":  "LS_SQL_ERP",
+                              "type":  "LinkedServiceReference"
+                          }
+}
